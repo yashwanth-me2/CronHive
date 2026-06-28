@@ -10,6 +10,10 @@ from src.api.v1 import auth, jobs
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Initialize resources
+    from src.infrastructure.database.connection import engine
+    from src.infrastructure.database.models import SQLModel
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
     yield
     # Shutdown: Clean up resources
 

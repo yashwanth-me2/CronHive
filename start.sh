@@ -1,8 +1,5 @@
 #!/bin/bash
 set -e
-
-echo "Running database migrations..."
-alembic upgrade head
-
-echo "Starting FastAPI server..."
-exec fastapi run src/main.py --host 0.0.0.0 --port 8000
+PORT="${PORT:-8000}"
+echo "Starting FastAPI server on port $PORT..."
+exec fastapi run src/main.py --host 0.0.0.0 --port $PORT
