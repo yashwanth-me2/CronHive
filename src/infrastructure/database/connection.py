@@ -5,7 +5,7 @@ from src.config import settings
 
 # Create async engine. `echo=True` will log all SQL queries if in development mode.
 engine = create_async_engine(
-    settings.database_url,
+    settings.get_database_url,
     echo=settings.environment == "development",
     future=True,
     pool_size=20,
