@@ -21,15 +21,15 @@ services:
       - key: ENVIRONMENT
         value: production
 
+  - type: redis
+    name: cronhive-redis
+    plan: free
+    region: oregon
+    ipAllowList: [] # Allows internal connections only
+
 databases:
   - name: cronhive-db
     databaseName: cronhive
     user: cronhive_user
     plan: free
     region: oregon
-
-  - type: redis
-    name: cronhive-redis
-    plan: free
-    region: oregon
-    ipAllowList: [] # Allows internal connections only
