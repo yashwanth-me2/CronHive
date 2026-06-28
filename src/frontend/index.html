@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CronHive Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-elements">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <div class="layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass-panel">
+            <div class="logo">
+                <span class="logo-icon">🐝</span>
+                <h1>CronHive</h1>
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#" class="nav-link active" data-view="view-dashboard">Dashboard</a></li>
+                    <li><a href="#" class="nav-link" data-view="view-templates">Templates</a></li>
+                    <li><a href="#" class="nav-link" data-view="view-settings">Settings</a></li>
+                </ul>
+            </nav>
+            <div class="user-status">
+                <span class="status-indicator"></span>
+                <span id="tenant-name">Demo User</span>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view-section active">
+                <section class="metrics-grid">
+                    <div class="metric-card glass-panel">
+                        <h3>Total Jobs</h3>
+                        <div class="metric-value" id="total-jobs">0</div>
+                    </div>
+                    <div class="metric-card glass-panel">
+                        <h3>Active Jobs</h3>
+                        <div class="metric-value" id="active-jobs">0</div>
+                    </div>
+                    <div class="metric-card glass-panel">
+                        <h3>System Status</h3>
+                        <div class="metric-value text-success">Healthy</div>
+                    </div>
+                </section>
+
+                <section class="actions-bar">
+                    <h2>Scheduled Jobs</h2>
+                    <button class="btn btn-primary" id="new-job-btn">+ New Job</button>
+                </section>
+
+                <div class="jobs-container glass-panel">
+                    <table class="jobs-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Target URL</th>
+                                <th>Schedule</th>
+                                <th>Next Run</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobs-list">
+                            <tr><td colspan="6" class="loading"><div class="spinner"></div> Loading jobs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Templates View -->
+            <div id="view-templates" class="view-section">
+                <h2>Job Templates</h2>
+                <p class="subtitle">Quickly create standard jobs for your infrastructure.</p>
+                
+                <div class="templates-grid">
+                    <div class="template-card glass-panel" onclick="useTemplate('Database Backup', 'https://api.internal.com/backup', '0 2 * * *')">
+                        <div class="template-icon">💾</div>
+                        <h3>Nightly Database Backup</h3>
+                        <p>Trigger a full database snapshot and upload to S3 every night at 2 AM.</p>
+                    </div>
+                    <div class="template-card glass-panel" onclick="useTemplate('Sync Stripe Data', 'https://api.billing.com/sync', '*/15 * * * *')">
+                        <div class="template-icon">💳</div>
+                        <h3>Sync Stripe Data</h3>
+                        <p>Synchronize billing data from Stripe webhooks every 15 minutes.</p>
+                    </div>
+                    <div class="template-card glass-panel" onclick="useTemplate('Send Engagement Emails', 'https://api.marketing.com/send', '0 9 * * *')">
+                        <div class="template-icon">✉️</div>
+                        <h3>Engagement Emails</h3>
+                        <p>Send daily morning digest emails to active users at 9 AM.</p>
+                    </div>
+                    <div class="template-card glass-panel" onclick="useTemplate('Clear Redis Cache', 'https://api.cache.com/purge', '0 * * * *')">
+                        <div class="template-icon">🧹</div>
+                        <h3>Clear Stale Cache</h3>
+                        <p>Purge Redis keys older than 24 hours at the start of every hour.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="view-settings" class="view-section">
+                <h2>Account Settings</h2>
+                
+                <div class="settings-card glass-panel">
+                    <h3>API Access</h3>
+                    <p class="subtitle">Use this key to authenticate your backend services with CronHive.</p>
+                    
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label>Your API Key</label>
+                        <div class="api-key-container">
+                            <input type="text" id="api-key-display" readonly value="Loading...">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-info-grid">
+                        <div class="info-item">
+                            <label>Account Email</label>
+                            <div id="settings-email">-</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Plan Limits</label>
+                            <div>100 Jobs Max, 60 req/min</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- New Job Modal -->
+    <div class="modal-backdrop" id="job-modal">
+        <div class="modal glass-panel">
+            <h2>Create New Job</h2>
+            <form id="new-job-form">
+                <div class="form-group">
+                    <label for="job-name">Job Name</label>
+                    <input type="text" id="job-name" required placeholder="e.g., Weekly DB Backup">
+                </div>
+                <div class="form-group">
+                    <label for="job-url">Target Webhook URL</label>
+                    <input type="url" id="job-url" required placeholder="https://api.example.com/webhook">
+                </div>
+                <div class="form-group">
+                    <label for="job-cron">Cron Expression</label>
+                    <input type="text" id="job-cron" placeholder="* * * * *" value="* * * * *">
+                    <small>Standard 5-part cron syntax. Leave blank for one-time job.</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('job-modal').classList.remove('show')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Job</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Executions Modal -->
+    <div class="modal-backdrop" id="executions-modal">
+        <div class="modal glass-panel modal-lg">
+            <h2>Execution Logs</h2>
+            <div class="executions-container">
+                <table class="jobs-table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Attempt</th>
+                            <th>HTTP Code</th>
+                            <th>Duration</th>
+                            <th>Completed At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="executions-list">
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-actions" style="margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('executions-modal').classList.remove('show')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="app.js"></script>
+</body>
+</html>

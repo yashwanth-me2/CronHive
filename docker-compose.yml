@@ -1,0 +1,63 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://cronhive:secret@db:5432/cronhive
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=supersecret_jwt_key_change_in_prod
+      - ENVIRONMENT=development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: fastapi dev src/main.py --host 0.0.0.0 --port 8000
+    volumes:
+      - ./src:/app/src
+
+  worker:
+    build: .
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://cronhive:secret@db:5432/cronhive
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - api
+    command: python -m src.workers.queue_poller
+    volumes:
+      - ./src:/app/src
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=cronhive
+      - POSTGRES_USER=cronhive
+      - POSTGRES_PASSWORD=secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cronhive"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
