@@ -27,8 +27,8 @@ graph TD
     Client([Web UI / API Client]) --> API[FastAPI Web Server]
     
     subgraph Infrastructure
-        API --> |Reads/Writes| DB[(PostgreSQL)]
-        API --> |Enqueues Tasks| Redis[(Redis ZSET)]
+        API -->|"Reads/Writes"| DB[(PostgreSQL)]
+        API -->|"Enqueues Tasks"| Redis[(Redis ZSET)]
     end
     
     subgraph Worker Pool
@@ -36,14 +36,14 @@ graph TD
         Worker2[Async Poller]
     end
     
-    Redis -.-> |O(log N) Atomic Pop| Worker1
-    Redis -.-> |O(log N) Atomic Pop| Worker2
+    Redis -.->|"O(log N) Atomic Pop"| Worker1
+    Redis -.->|"O(log N) Atomic Pop"| Worker2
     
-    Worker1 --> |HTTP POST w/ Circuit Breaker| External[External Webhook]
-    Worker2 --> |HTTP POST w/ Circuit Breaker| External
+    Worker1 -->|"HTTP POST w/ Circuit Breaker"| External[External Webhook]
+    Worker2 -->|"HTTP POST w/ Circuit Breaker"| External
     
-    Worker1 --> |Records Execution & Calculates Next Run| DB
-    Worker2 --> |Records Execution & Calculates Next Run| DB
+    Worker1 -->|"Records Execution & Calculates Next Run"| DB
+    Worker2 -->|"Records Execution & Calculates Next Run"| DB
 ```
 
 ## 🛠 Tech Stack
