@@ -60,7 +60,7 @@ Ensure you have Docker and Docker Compose installed.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/cronhive.git
+   git clone https://github.com/yashwanth-me2/CronHive.git
    cd cronhive
    ```
 
